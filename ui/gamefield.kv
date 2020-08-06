@@ -1,0 +1,24 @@
+#:import GameField ui.gamefield.GameField
+
+
+<GameScreen@Screen>
+    name: "gamefield"
+    BoxLayout:
+        orientation:    "vertical"
+        Widget:
+            size_hint_y:    0.1
+        BoxLayout:
+            orientation:    'horizontal'
+            Widget:
+                size_hint_x:    0.1
+            GameField:
+                id: gamefield
+            Widget:
+                size_hint_x:    0.1
+
+        Widget:
+            size_hint_y:    0.1
+
+
+
+
