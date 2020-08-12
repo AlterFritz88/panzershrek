@@ -1,0 +1,8 @@
+#:import BattleCard ui.cards.BattleCard
+#:import EmptyField ui.cards.EmptyField
+
+<BattleCard>:
+    on_press:   self.select()
+
+<EmptyField>:
+    on_press:   self.move()
