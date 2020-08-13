@@ -21,5 +21,5 @@ class PanzerShrek(MDApp):
 
 if __name__ == '__main__':
 
-    #Window.size = (1920, 1080)
+    Window.size = (1920, 1080)
     PanzerShrek().run()

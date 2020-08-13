@@ -67,16 +67,17 @@ class GameField(FloatLayout):
                 y += cellheight
                 # and set the x value back to the beginning
                 x = start
-        self.units = []
+        self.my_units = []
+        self.enemy_units = []
         headquarter_my = BattleCard(source='test.png', pos=app.grids_pos[(0, 0)], size=(cellwidth - 2, cellheight - 2),
-                       size_hint=(None, None), field_pos=(0, 0), id="1")
-        self.units.append(headquarter_my)
+                       size_hint=(None, None), field_pos=(0, 0), my_unit=True)
+        self.my_units.append(headquarter_my)
         self.add_widget(headquarter_my)
         headquarter_enemy = BattleCard(source='test.png', pos=app.grids_pos[(2, 4)], size=(cellwidth - 2, cellheight - 2),
-                       size_hint=(None, None), field_pos=(2, 4))
+                       size_hint=(None, None), field_pos=(2, 4), my_unit=True)
         self.add_widget(headquarter_enemy)
-        self.ids["1"] = weakref.ref(headquarter_my)
-        self.ids["2"] = weakref.ref(headquarter_enemy)
+        self.my_units.append(headquarter_enemy)
+
 
 
 

@@ -6,18 +6,22 @@ from kivy.app import App
 
 class BattleCard(ButtonBehavior, Image):
 
-    def __init__(self, field_pos, **kwargs):
+    def __init__(self, field_pos, my_unit, **kwargs):
         self.field_pos = field_pos
+        self.my_unit = my_unit
         super(BattleCard, self).__init__(**kwargs)
 
     def select(self):
         app = App.get_running_app()
-        if not app.selected:
-            app.selected = self
-            self.source = 'icon.png'
-        else:
-            app.selected = None
-            self.source = 'test.png'
+        if self.my_unit:
+            if not app.selected:
+                app.selected = {'item': self, 'num': app.root.get_screen("gamefield").ids.gamefield.my_units.index(self)}
+                self.source = 'icon.png'
+                app.root.get_screen("gamefield").ids.gamefield.remove_widget(self)
+                app.root.get_screen("gamefield").ids.gamefield.add_widget(self)
+            else:
+                app.selected = None
+                self.source = 'test.png'
 
 
 class EmptyField(Button):
@@ -29,10 +33,9 @@ class EmptyField(Button):
     def move(self):
         app = App.get_running_app()
         if app.selected:
-            print(app.selected.id)
-            app.root.get_screen("gamefield").ids.gamefield.units[0].source = 'test.png'
+            app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].source = 'test.png'
 
             animation = Animation(pos=self.pos)
-            animation.start(app.selected)
+            animation.start(app.selected['item'])
 
             app.selected = None
