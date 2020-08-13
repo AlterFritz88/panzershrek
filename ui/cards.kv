@@ -2,7 +2,42 @@
 #:import EmptyField ui.cards.EmptyField
 
 <BattleCard>:
+
+    canvas.before:
+        Color:
+            rgba: self.border_color
+        Line:
+            width:  4
+            rectangle: self.x, self.y, self.width, self.height
+
     on_press:   self.select()
+    orientation:    'horizontal'
+    border: 255,10,10,110
+    Widget:
+        size_hint_x:    0.8
+    BoxLayout:
+        orientation:    'vertical'
+        size_hint_x:    0.4
+        spacing:    5
+        Label:
+            text:   "12"
+            id: health
+            font_size:  '45dp'
+            outline_color:  0,0,0
+            outline_width:  5
+            size_hint_y:    0.3
+        Label:
+            text:   "2"
+            id: fire
+            font_size:  '45dp'
+            color: 0.8,0,0,1
+            outline_color:  0,0,0
+            outline_width:  5
+            size_hint_y:    0.3
+        Widget:
+            size_hint_y:    0.9
+
+
 
 <EmptyField>:
     on_press:   self.move()

@@ -69,11 +69,11 @@ class GameField(FloatLayout):
                 x = start
         self.my_units = []
         self.enemy_units = []
-        headquarter_my = BattleCard(source='test.png', pos=app.grids_pos[(0, 0)], size=(cellwidth - 2, cellheight - 2),
+        headquarter_my = BattleCard(source='test.jpg', pos=app.grids_pos[(0, 0)], size=(cellwidth - 2, cellheight - 2),
                        size_hint=(None, None), field_pos=(0, 0), my_unit=True)
         self.my_units.append(headquarter_my)
         self.add_widget(headquarter_my)
-        headquarter_enemy = BattleCard(source='test.png', pos=app.grids_pos[(2, 4)], size=(cellwidth - 2, cellheight - 2),
+        headquarter_enemy = BattleCard(source='test.jpg', pos=app.grids_pos[(2, 4)], size=(cellwidth - 2, cellheight - 2),
                        size_hint=(None, None), field_pos=(2, 4), my_unit=True)
         self.add_widget(headquarter_enemy)
         self.my_units.append(headquarter_enemy)
