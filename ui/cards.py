@@ -15,13 +15,18 @@ class BattleCard(ButtonBehavior, Image):
         app = App.get_running_app()
         if self.my_unit:
             if not app.selected:
-                app.selected = {'item': self, 'num': app.root.get_screen("gamefield").ids.gamefield.my_units.index(self)}
-                self.source = 'icon.png'
                 app.root.get_screen("gamefield").ids.gamefield.remove_widget(self)
                 app.root.get_screen("gamefield").ids.gamefield.add_widget(self)
+                self.source = 'icon.png'
+                app.selected = {'item': self,
+                                'num': app.root.get_screen("gamefield").ids.gamefield.my_units.index(self)}
             else:
-                app.selected = None
-                self.source = 'test.png'
+                app.root.get_screen("gamefield").ids.gamefield.remove_widget(self)
+                app.root.get_screen("gamefield").ids.gamefield.add_widget(self)
+                app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].source = 'test.png'
+                app.selected = {'item': self,
+                                'num': app.root.get_screen("gamefield").ids.gamefield.my_units.index(self)}
+                self.source = 'icon.png'
 
 
 class EmptyField(Button):
