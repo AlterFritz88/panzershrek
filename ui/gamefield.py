@@ -21,10 +21,10 @@ class GameField(FloatLayout):
         cellwidth = cellheight
         app.card_size = cellheight
         print(app.root.size[0] // 10)
-        start = app.root.size[0] // 6
+        start = app.root.size[0] // 5
         # start the circles from the point 0,0
         x = start
-        y = app.root.size[1] // 5
+        y = app.root.size[1] // 4
 
         # wipe the canvas clean
         self.canvas.clear()
@@ -74,9 +74,19 @@ class GameField(FloatLayout):
         self.my_units.append(headquarter_my)
         self.add_widget(headquarter_my)
         headquarter_enemy = BattleCard(source='test.jpg', pos=app.grids_pos[(2, 4)], size=(cellwidth - 2, cellheight - 2),
-                       size_hint=(None, None), field_pos=(2, 4), my_unit=True)
+                       size_hint=(None, None), field_pos=(2, 4), my_unit=False)
         self.add_widget(headquarter_enemy)
         self.my_units.append(headquarter_enemy)
+
+        unit = BattleCard(source='test.jpg', size=(cellwidth - 2, cellheight - 2),
+                        size_hint=(None, None), field_pos=(0, 0), my_unit=True,)
+        app.root.get_screen("gamefield").ids.reserve_cards.add_widget(unit)
+        unit2 = BattleCard(source='test.jpg', size=(cellwidth - 2, cellheight - 2),
+                          size_hint=(None, None), field_pos=(0, 0), my_unit=True)
+        app.root.get_screen("gamefield").ids.reserve_cards.add_widget(unit2)
+        unit3 = BattleCard(source='test.jpg', size=(cellwidth - 2, cellheight - 2),
+                           size_hint=(None, None), field_pos=(0, 0), my_unit=True)
+        app.root.get_screen("gamefield").ids.reserve_cards.add_widget(unit3)
 
 
 

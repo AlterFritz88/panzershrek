@@ -12,29 +12,36 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
         self.field_pos = field_pos
         self.my_unit = my_unit
         if self.my_unit:
-            self.border_color = (0.9, 0.5, 0.5, 0.5)
+            self.border_color = (0, 0.8, 0.5, 0.5)
+        else:
+            self.border_color = (0.8, 0, 0.2, 0.5)
         super(BattleCard, self).__init__(**kwargs)
 
-            # with self.canvas.before:
-            #     Color(rgba=(1, .5, .5, 1))
-            #     Line(width=12, rectangle=[self.x, self.y, self.width, self.height], )
+    #obj = ()
 
     def select(self):
         app = App.get_running_app()
-        if self.my_unit:
+        if self.my_unit and not app.moving:
             if not app.selected:
                 app.root.get_screen("gamefield").ids.gamefield.remove_widget(self)
                 app.root.get_screen("gamefield").ids.gamefield.add_widget(self)
-                self.source = 'icon.jpg'
+                self.border_line = Line(width=3, rectangle=[self.x, self.y, self.width, self.height], )
+                self.canvas.add(self.border_line)
                 app.selected = {'item': self,
                                 'num': app.root.get_screen("gamefield").ids.gamefield.my_units.index(self)}
+
+                unit3 = BattleCard(source='test.jpg', size=(app.card_size, app.card_size),
+                                   size_hint=(None, None), field_pos=(0, 0), my_unit=True)
+                app.root.get_screen("gamefield").ids.reserve_cards.add_widget(unit3)
+
             else:
                 app.root.get_screen("gamefield").ids.gamefield.remove_widget(self)
                 app.root.get_screen("gamefield").ids.gamefield.add_widget(self)
-                app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].source = 'test.jpg'
+                app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].canvas.remove(app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].border_line)
                 app.selected = {'item': self,
                                 'num': app.root.get_screen("gamefield").ids.gamefield.my_units.index(self)}
-                self.source = 'icon.jpg'
+                self.border_line = Line(width=3, rectangle=[self.x, self.y, self.width, self.height], )
+                self.canvas.add(self.border_line)
 
 
 class EmptyField(Button):
@@ -47,8 +54,13 @@ class EmptyField(Button):
         app = App.get_running_app()
         if app.selected:
             app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].source = 'test.jpg'
-
+            app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].canvas.remove(app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].border_line)
             animation = Animation(pos=self.pos)
+            app.moving = True
+            animation.bind(on_complete=self.unblock)
             animation.start(app.selected['item'])
-
             app.selected = None
+
+    def unblock(self, *args):
+        app = App.get_running_app()
+        app.moving = False

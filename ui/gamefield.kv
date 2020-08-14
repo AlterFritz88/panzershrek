@@ -1,4 +1,5 @@
 #:import GameField ui.gamefield.GameField
+#:import BattleCard ui.cards.BattleCard
 
 
 <GameScreen@Screen>
@@ -6,9 +7,10 @@
     BoxLayout:
         orientation:    "vertical"
         Widget:
-            size_hint_y:    0.1
+            size_hint_y:    0.5
         BoxLayout:
             orientation:    'horizontal'
+            size_hint_y:    0.5
             Widget:
                 size_hint_x:    0.1
             GameField:
@@ -16,8 +18,18 @@
             Widget:
                 size_hint_x:    0.1
 
-        Widget:
-            size_hint_y:    0.1
+
+        BoxLayout:
+            orientation:    'horizontal'
+            Widget:
+            BoxLayout:
+                pos:    self.parent.pos
+                size:   self.parent.size
+                id: reserve_cards
+                size_hint_y:    0.1
+                orientation:    'horizontal'
+                spacing:    10
+            Widget:
 
 
 
