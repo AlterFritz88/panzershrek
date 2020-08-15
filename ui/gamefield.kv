@@ -1,5 +1,6 @@
 #:import GameField ui.gamefield.GameField
 #:import BattleCard ui.cards.BattleCard
+#:import BattleCardReserve ui.cards.BattleCardReserve
 
 
 <GameScreen@Screen>
@@ -7,29 +8,37 @@
     BoxLayout:
         orientation:    "vertical"
         Widget:
-            size_hint_y:    0.5
+            size_hint_y:    0.1
         BoxLayout:
             orientation:    'horizontal'
-            size_hint_y:    0.5
+            size_hint_y:    0.7
             Widget:
                 size_hint_x:    0.1
             GameField:
                 id: gamefield
             Widget:
                 size_hint_x:    0.1
-
-
         BoxLayout:
             orientation:    'horizontal'
+            size_hint_y:    0.3
             Widget:
-            BoxLayout:
-                pos:    self.parent.pos
-                size:   self.parent.size
+                size_hint_x:    0.15
+            RV:
                 id: reserve_cards
-                size_hint_y:    0.1
-                orientation:    'horizontal'
-                spacing:    10
             Widget:
+                size_hint_x:    0.15
+
+<RV@RecycleView>:
+    viewclass: 'BattleCardReserve'
+    data:   [{'source': 'imgs/stab1.png'} for x in range(4)]
+    RecycleBoxLayout:
+        default_size: None, None
+        default_size_hint: None, None
+        size_hint_x: None
+        width: self.minimum_width
+        orientation: 'horizontal'
+        id:     rs
+        spacing:    3
 
 
 

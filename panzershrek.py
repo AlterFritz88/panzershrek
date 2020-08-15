@@ -6,6 +6,7 @@ from kivy.core.window import Window
 class PanzerShrek(MDApp):
     selected = None
     moving = False
+    card_in_reserve = None
     def build(self):
         return Builder.load_file('ui/main_ui.kv')
 
