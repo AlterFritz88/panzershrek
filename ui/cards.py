@@ -1,11 +1,12 @@
 from itertools import product, starmap
+import math
 
 from kivy.uix.image import Image
 from kivy.uix.button import ButtonBehavior, Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.animation import Animation
 from kivy.app import App
-from kivy.graphics import Color, Line, Rectangle
+from kivy.graphics import Color, Line, Rectangle, Rotate, PopMatrix, PushMatrix
 
 
 class BattleCard(ButtonBehavior, Image, BoxLayout):
@@ -27,7 +28,18 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
 
         if not self.my_unit and not app.moving and app.selected:
             cells = list(starmap(lambda a, b: (self.field_pos[0] + a, self.field_pos[1] + b), product((0, -1, +1), (0, -1, +1))))[1:]
-            if app.selected['item'].field_pos in cells:
+
+            myradians = math.atan2(self.pos[1] - app.selected['item'].pos[1], self.pos[0] - app.selected['item'].pos[0])
+            angle = math.degrees(myradians)
+            print(self.pos, app.selected['item'].pos)
+            self.BANG = Bang(source='imgs/bullet.png', pos=app.selected['item'].pos, size=self.size,
+                             size_hint=(None, None), angle=angle,)
+
+            app.root.get_screen("gamefield").ids.gamefield.add_widget(self.BANG)
+            animation = Animation(pos=self.pos)
+            animation.start(self.BANG)
+
+            if app.selected['item'].field_pos in cells:     # если карта соседняя, то атакую
                 self.attack()
 
         if self.my_unit and not app.moving:
@@ -54,6 +66,9 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
                                 'num': app.root.get_screen("gamefield").ids.gamefield.my_units.index(self)}
                 self.border_line = Line(width=3, rectangle=[self.x, self.y, self.width, self.height])
                 self.canvas.add(self.border_line)
+
+    def attack(self):
+        pass
 
 
 class BattleCardReserve(ButtonBehavior, Image, BoxLayout):
@@ -142,3 +157,20 @@ class EmptyField(Button):
         app = App.get_running_app()
         app.moving = False
         app.root.get_screen("gamefield").ids.gamefield.remove_widget(self.BANG)
+
+
+class Bang(Image):
+    def __init__(self, angle, **kwargs):
+
+        super(Bang, self).__init__(**kwargs)
+        self.rotate = Rotate(angle=angle)
+        self.rotate.origin = self.center
+        self.canvas.before.add(PushMatrix())
+        self.canvas.before.add(self.rotate)
+        self.canvas.after.add(PopMatrix())
+
+        self.bind(pos=self.update_canvas)
+        self.bind(size=self.update_canvas)
+
+    def update_canvas(self, *args):
+        self.rotate.origin = self.center
