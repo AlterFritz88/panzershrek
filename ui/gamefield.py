@@ -22,22 +22,17 @@ class GameField(FloatLayout):
         self.canvas.clear()
         app.grids_pos = {}
 
-
         with self.canvas:
             # in the canvas
             for r in range(3):
                 # loop through the rows
                 for c in range(5):
-                    # loop through the columns
-                    # if the cell in the GRID is alive the circle should be green
 
                     Color(0.5, 0.5, 0.5, 0.5)
-                    # draw a circle
                     app.grids_pos[(r, c)] = (x, y)
 
                     self.add_widget(EmptyField(pos=(x, y), size=(cellwidth - 2, cellheight - 2), size_hint=(None, None),
                                                field_pos=(r, c)))
-                    # add the width to go to the next position to draw the next circle
                     x += cellwidth
                 # go to the next row
                 y += cellheight
@@ -54,15 +49,11 @@ class GameField(FloatLayout):
         self.add_widget(headquarter_enemy)
         self.my_units.append(headquarter_enemy)
 
-        unit = BattleCard(source='imgs/stab1.png', size=(cellwidth - 2, cellheight - 2),
-                        size_hint=(None, None), field_pos=(0, 0), my_unit=True,)
-        app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.add_widget(unit)
-        # unit2 = BattleCard(source='imgs/stab1.png', size=(cellwidth - 2, cellheight - 2),
-        #                   size_hint=(None, None), field_pos=(0, 0), my_unit=True)
-        # app.root.get_screen("gamefield").ids.reserve_cards.add_widget(unit2)
-        # unit3 = BattleCard(source='imgs/stab1.png', size=(cellwidth - 2, cellheight - 2),
-        #                    size_hint=(None, None), field_pos=(0, 0), my_unit=True)
-        # app.root.get_screen("gamefield").ids.reserve_cards.add_widget(unit3)
+        # unit = BattleCard(source='imgs/stab1.png', size=(cellwidth - 2, cellheight - 2),
+        #                 size_hint=(None, None), field_pos=(0, 0), my_unit=True)
+        # app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.add_widget(unit)
+        app.occupied_cells.append((2, 4))
+        app.occupied_cells.append((0, 0))
 
 
 
