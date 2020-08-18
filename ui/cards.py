@@ -1,5 +1,6 @@
 from itertools import product, starmap
 import math
+import time
 
 from kivy.uix.image import Image
 from kivy.uix.button import ButtonBehavior, Button
@@ -27,16 +28,21 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
             app.card_in_reserve = None
 
         if not self.my_unit and not app.moving and app.selected:
+            try:
+                app.root.get_screen("gamefield").ids.gamefield.remove_widget(self.BANG)
+            except AttributeError:
+                pass
+
             cells = list(starmap(lambda a, b: (self.field_pos[0] + a, self.field_pos[1] + b), product((0, -1, +1), (0, -1, +1))))[1:]
 
             myradians = math.atan2(self.pos[1] - app.selected['item'].pos[1], self.pos[0] - app.selected['item'].pos[0])
             angle = math.degrees(myradians)
-            print(self.pos, app.selected['item'].pos)
             self.BANG = Bang(source='imgs/bullet.png', pos=app.selected['item'].pos, size=self.size,
                              size_hint=(None, None), angle=angle,)
 
             app.root.get_screen("gamefield").ids.gamefield.add_widget(self.BANG)
-            animation = Animation(pos=self.pos)
+            animation = Animation(pos=self.pos, d=0.2)
+            animation.bind(on_complete=self._kill_bullet)
             animation.start(self.BANG)
 
             if app.selected['item'].field_pos in cells:     # если карта соседняя, то атакую
@@ -69,6 +75,18 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
 
     def attack(self):
         pass
+
+    def _kill_bullet(self, *args):
+        app = App.get_running_app()
+        animation = Animation(pos=(self.pos[0] + 10, self.pos[1]), d=0.05)
+        animation += Animation(pos=(self.pos[0] - 10, self.pos[1]), d=0.05)
+        animation += Animation(pos=(self.pos[0], self.pos[1]), d=0.1)
+        animation.start(self)
+        app.root.get_screen("gamefield").ids.gamefield.remove_widget(self.BANG)
+        self.BANG = Image(source='imgs/bang.gif', pos=self.pos, size=self.size, size_hint=(None, None), anim_delay=0,
+                          anim_loop=1)
+        app.root.get_screen("gamefield").ids.gamefield.add_widget(self.BANG)
+        #app.root.get_screen("gamefield").ids.gamefield.remove_widget(self.BANG)
 
 
 class BattleCardReserve(ButtonBehavior, Image, BoxLayout):
@@ -124,9 +142,7 @@ class EmptyField(Button):
             app.occupied_cells.remove(app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].field_pos)
             app.root.get_screen("gamefield").ids.gamefield.my_units[app.selected['num']].field_pos = self.field_pos
             app.occupied_cells.append(self.field_pos)
-            self.BANG = Image(source='imgs/bang.gif', pos=self.pos, size=self.size, size_hint=(None, None), anim_delay=0,
-                         anim_loop=1)
-            app.root.get_screen("gamefield").ids.gamefield.add_widget(self.BANG)
+
             animation = Animation(pos=self.pos)
             app.moving = True
             animation.bind(on_complete=self.unblock)
@@ -156,7 +172,6 @@ class EmptyField(Button):
     def unblock(self, *args):
         app = App.get_running_app()
         app.moving = False
-        app.root.get_screen("gamefield").ids.gamefield.remove_widget(self.BANG)
 
 
 class Bang(Image):
