@@ -21,8 +21,48 @@
         BoxLayout:
             orientation:    'horizontal'
             size_hint_y:    0.3
-            Widget:
-                size_hint_x:    0.15
+            FloatLayout:
+                size_hint_x:    0.25
+                id: stack
+                Image:
+                    id: card_1
+                    source: 'imgs/skirt.png'
+                    size_hint:  None, None
+                    size:     self.parent.height // 1.2, self.parent.height // 1.2
+                    canvas.before:
+                        PushMatrix
+                        Rotate:
+                            angle: 15
+                            axis: 0, 0, 1
+                            origin: self.center
+                    canvas.after:
+                        PopMatrix
+                Image:
+                    id: card_2
+                    source: 'imgs/skirt.png'
+                    size_hint:  None, None
+                    size:     self.parent.height // 1.2, self.parent.height // 1.2
+                    canvas.before:
+                        PushMatrix
+                        Rotate:
+                            angle: 5
+                            axis: 0, 0, 1
+                            origin: self.center
+                    canvas.after:
+                        PopMatrix
+                Image:
+                    id: card_3
+                    source: 'imgs/skirt.png'
+                    size_hint:  None, None
+                    size:     self.parent.height // 1.2, self.parent.height // 1.2
+                    canvas.before:
+                        PushMatrix
+                        Rotate:
+                            angle: 20
+                            axis: 0, 0, 1
+                            origin: self.center
+                    canvas.after:
+                        PopMatrix
             RV:
                 id: reserve_cards
             Widget:
