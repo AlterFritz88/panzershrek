@@ -1,13 +1,15 @@
 from itertools import product, starmap
 import math
-import time
+from pathlib import Path
 
 from kivy.uix.image import Image
 from kivy.uix.button import ButtonBehavior, Button
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
 from kivy.animation import Animation
 from kivy.app import App
 from kivy.graphics import Color, Line, Rectangle, Rotate, PopMatrix, PushMatrix
+from kivy.clock import Clock
 
 
 class BattleCard(ButtonBehavior, Image, BoxLayout):
@@ -34,18 +36,7 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
                 pass
 
             cells = list(starmap(lambda a, b: (self.field_pos[0] + a, self.field_pos[1] + b), product((0, -1, +1), (0, -1, +1))))[1:]
-
-            myradians = math.atan2(self.pos[1] - app.selected['item'].pos[1], self.pos[0] - app.selected['item'].pos[0])
-            angle = math.degrees(myradians)
-            self.BANG = Bang(source='imgs/bullet.png', pos=app.selected['item'].pos, size=self.size,
-                             size_hint=(None, None), angle=angle,)
-
-            app.root.get_screen("gamefield").ids.gamefield.add_widget(self.BANG)
-            animation = Animation(pos=self.pos, d=0.2)
-            animation.bind(on_complete=self._kill_bullet)
-            animation.start(self.BANG)
-
-            if app.selected['item'].field_pos in cells:     # если карта соседняя, то атакую
+            if app.selected['item'].field_pos in cells or app.selected['item'].type in ('stab', 'art'):     # если карта соседняя, то атакую
                 self.attack()
 
         if self.my_unit and not app.moving:
@@ -60,7 +51,7 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
 
                 # добавляю карту в руку
                 temp_data = app.root.get_screen("gamefield").ids.reserve_cards.data[::]
-                temp_data += [{"source": 'imgs/stab1.png'}]
+                temp_data += [{"source": 'imgs/stab1.png', 'base_card': 'LehrStab'}]
                 app.root.get_screen("gamefield").ids.reserve_cards.data = temp_data
                 app.root.get_screen("gamefield").ids.reserve_cards.refresh_from_data()
 
@@ -74,7 +65,18 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
                 self.canvas.add(self.border_line)
 
     def attack(self):
-        pass
+        app = App.get_running_app()
+        myradians = math.atan2(self.pos[1] - app.selected['item'].pos[1], self.pos[0] - app.selected['item'].pos[0])
+        angle = math.degrees(myradians)
+        self.BANG = Bang(source='imgs/bullet.png', pos=app.selected['item'].pos,
+                         size=(self.size[0] // 2, self.size[1] // 2),
+                         size_hint=(None, None), angle=angle, center_x=app.selected['item'].center_x,
+                         center_y=app.selected['item'].center_y)
+
+        app.root.get_screen("gamefield").ids.gamefield.add_widget(self.BANG)
+        animation = Animation(pos=(self.pos[0] + self.size[1] // 4, self.pos[1] + self.size[1] // 4), d=0.2)
+        animation.bind(on_complete=self._kill_bullet)
+        animation.start(self.BANG)
 
     def _kill_bullet(self, *args):
         app = App.get_running_app()
@@ -86,10 +88,29 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
         self.BANG = Image(source='imgs/bang.gif', pos=self.pos, size=self.size, size_hint=(None, None), anim_delay=0,
                           anim_loop=1)
         app.root.get_screen("gamefield").ids.gamefield.add_widget(self.BANG)
-        #app.root.get_screen("gamefield").ids.gamefield.remove_widget(self.BANG)
+        self.health -= app.selected['item'].fire
+        self.ids.health.text = str(self.health)
+        self.minus_fire_label = MinusLabel(text=str(-app.selected['item'].fire), center_x=self.center_x,
+                                           center_y=self.center_y)
+        app.root.get_screen("gamefield").ids.gamefield.add_widget(self.minus_fire_label)
+        animation = Animation(center_y=(self.center_y + self.size[0]//1.5), d=0.8)
+        animation.bind(on_complete=self._kill_label)
+        animation.start(self.minus_fire_label)
+
+    def _kill_label(self, *args):
+        app = App.get_running_app()
+        app.root.get_screen("gamefield").ids.gamefield.remove_widget(self.minus_fire_label)
 
 
 class BattleCardReserve(ButtonBehavior, Image, BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(BattleCardReserve, self).__init__(**kwargs)
+        Clock.schedule_once(self.finish_init, 0)
+
+    def finish_init(self, td):
+        print(self.base_card)
+
     def selected(self):
         app = App.get_running_app()
         if app.selected:
@@ -189,3 +210,7 @@ class Bang(Image):
 
     def update_canvas(self, *args):
         self.rotate.origin = self.center
+
+
+class MinusLabel(Label):
+    pass

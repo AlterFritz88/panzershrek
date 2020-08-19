@@ -6,6 +6,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
 
 from .cards import BattleCard, EmptyField
+from .stabs import LehrStab
 
 
 class GameField(FloatLayout):
@@ -40,18 +41,14 @@ class GameField(FloatLayout):
                 x = start
         self.my_units = []
         self.enemy_units = []
-        headquarter_my = BattleCard(source='imgs/stab1.png', pos=app.grids_pos[(0, 0)], size=(cellwidth - 2, cellheight - 2),
-                       size_hint=(None, None), field_pos=(0, 0), my_unit=True)
+        headquarter_my = LehrStab(field_pos=(0, 0), my_unit=True, pos=app.grids_pos[(0, 0)], size=(cellwidth - 2, cellheight - 2))
         self.my_units.append(headquarter_my)
         self.add_widget(headquarter_my)
-        headquarter_enemy = BattleCard(source='imgs/stab1.png', pos=app.grids_pos[(1, 4)], size=(cellwidth - 2, cellheight - 2),
-                       size_hint=(None, None), field_pos=(1, 4), my_unit=False)
+        headquarter_enemy = LehrStab(field_pos=(1, 4), my_unit=False, pos=app.grids_pos[(1, 4)], size=(cellwidth - 2, cellheight - 2),
+                       size_hint=(None, None))
         self.add_widget(headquarter_enemy)
         self.my_units.append(headquarter_enemy)
 
-        # unit = BattleCard(source='imgs/stab1.png', size=(cellwidth - 2, cellheight - 2),
-        #                 size_hint=(None, None), field_pos=(0, 0), my_unit=True)
-        # app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.add_widget(unit)
         app.occupied_cells.append((2, 4))
         app.occupied_cells.append((0, 0))
 

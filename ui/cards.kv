@@ -1,6 +1,7 @@
 #:import BattleCard ui.cards.BattleCard
 #:import BattleCardReserve ui.cards.BattleCardReserve
 #:import EmptyField ui.cards.EmptyField
+#:import MinusLabel ui.cards.MinusLabel
 
 <BattleCard>:
     canvas.after:
@@ -20,14 +21,14 @@
         size_hint_x:    0.4
         spacing:    5
         Label:
-            text:   "12"
+            text:   '0'
             id: health
             font_size:  sp(35)
             outline_color:  0,0,0
             outline_width:  5
             size_hint_y:    0.3
         Label:
-            text:   "2"
+            text:   '0'
             id: fire
             font_size:  sp(35)
             color: 0.8,0,0,1
@@ -70,3 +71,13 @@
 
 <EmptyField>:
     on_press:   self.move()
+
+<MinusLabel>:
+    font_size:     sp(40)
+    outline_color: (0, 0, 0)
+    color:         (0.8, 0, 0, 1)
+    outline_width:  5
+    size_hint:     (None, None)
+    halign:        'center'
+    valign:        'center'
+    text_size:     self.size
