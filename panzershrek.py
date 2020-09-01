@@ -1,6 +1,7 @@
 from kivy.lang import Builder
 from kivymd.app import MDApp
 from kivy.core.window import Window
+from kivy.clock import Clock
 
 
 class PanzerShrek(MDApp):
@@ -10,6 +11,7 @@ class PanzerShrek(MDApp):
     occupied_cells = []
 
     def build(self):
+
         return Builder.load_file('ui/main_ui.kv')
 
     def __init__(self, **kwargs):
@@ -19,11 +21,12 @@ class PanzerShrek(MDApp):
         self.theme_cls.accent_palette = 'Green'
 
     def on_start(self):
-        self.root.get_screen("gamefield").ids.gamefield.update_canvas()
-        #self.root.ids.my_widget.update_canvas()
+        Clock.schedule_once(lambda *args: self.prepear_field())
 
+    def prepear_field(self):
+        self.root.get_screen("gamefield").ids.gamefield.new_game()
 
 if __name__ == '__main__':
 
-    Window.size = (1920, 1080)
+    Window.size = (1920//1.5, 1080//1.5)
     PanzerShrek().run()

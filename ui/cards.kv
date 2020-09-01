@@ -70,6 +70,9 @@
             size_hint_y:    0.9
 
 <EmptyField>:
+    size_hint: (None, None)
+    width: self.parent.height // 2.1
+    height: self.parent.height // 2.1
     on_press:   self.move()
 
 <MinusLabel>:

@@ -1,12 +1,12 @@
-from .cards import BattleCard
+import ui.cards as cards
 
 
-class LehrStab(BattleCard):
+class LehrStab(cards.BattleCard):
 
     def __init__(self, field_pos, my_unit, **kwargs):
         self.field_pos = field_pos
         self.my_unit = my_unit
-        self.source = 'imgs/stab1.png'
+
         self.size_hint = (None, None)
         self.fire = 2
         self.health = 20
@@ -18,3 +18,5 @@ class LehrStab(BattleCard):
         super(LehrStab, self).__init__(field_pos, my_unit, **kwargs)
         self.ids.health.text = str(self.health)
         self.ids.fire.text = str(self.fire)
+        self.source = 'imgs\stab1.png'
+

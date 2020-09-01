@@ -1,5 +1,6 @@
 #:import GameField ui.gamefield.GameField
 #:import BattleCard ui.cards.BattleCard
+#:import EmptyField ui.cards.EmptyField
 #:import BattleCardReserve ui.cards.BattleCardReserve
 
 
@@ -7,20 +8,55 @@
     name: "gamefield"
     BoxLayout:
         orientation:    "vertical"
+
+        BoxLayout:
+            orientation:    'horizontal'
+            size_hint_y:    0.3
+            Widget:
+                size_hint_x:    0.25
+            GameField:
+                id: gamefield
+                EmptyField:
+                    field_pos: (2, 0)
+                    id: 2,0
+                EmptyField:
+                    field_pos: (2, 1)
+                EmptyField:
+                    field_pos: (2, 2)
+                EmptyField:
+                    field_pos: (2, 3)
+                EmptyField:
+                    field_pos: (2, 4)
+                    id: 2,4
+                EmptyField:
+                    field_pos: (1, 0)
+                EmptyField:
+                    field_pos: (1, 1)
+                EmptyField:
+                    field_pos: (1, 2)
+                EmptyField:
+                    field_pos: (1, 3)
+                EmptyField:
+                    field_pos: (1, 4)
+                EmptyField:
+                    field_pos: (0, 0)
+                    id: 0,0
+                EmptyField:
+                    field_pos: (0, 1)
+                EmptyField:
+                    field_pos: (0, 2)
+                EmptyField:
+                    field_pos: (0, 3)
+                EmptyField:
+                    field_pos: (0, 4)
+
+            Widget:
+                size_hint_x:    0.1
         Widget:
             size_hint_y:    0.1
         BoxLayout:
             orientation:    'horizontal'
-            size_hint_y:    0.7
-            Widget:
-                size_hint_x:    0.1
-            GameField:
-                id: gamefield
-            Widget:
-                size_hint_x:    0.1
-        BoxLayout:
-            orientation:    'horizontal'
-            size_hint_y:    0.3
+            size_hint_y:    0.2
             FloatLayout:
                 size_hint_x:    0.25
                 id: stack
@@ -70,12 +106,13 @@
 
 <RV@RecycleView>:
     viewclass: 'BattleCardReserve'
-    data:   [{'source': 'imgs/stab1.png', "base_card": 'LehrStab'} for x in range(4)]
+    data:   [{"card": 'LehrStab'} for x in range(4)]
     RecycleBoxLayout:
         default_size: None, None
         default_size_hint: None, None
         size_hint_x: None
         width: self.minimum_width
+        height: self.minimum_height
         orientation: 'horizontal'
         id:     rs
         spacing:    3
