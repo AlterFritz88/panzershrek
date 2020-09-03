@@ -4,12 +4,19 @@
 #:import MinusLabel ui.cards.MinusLabel
 
 <BattleCard>:
+    choose_color: 0,0,0,0
     canvas.after:
         Color:
             rgba: self.border_color
         Line:
             width:  3
             rectangle: self.x+3, self.y+3, self.width-6, self.height-5
+        Color:
+            rgba: self.choose_color
+            group: 'a'
+        Line:
+            width:  2
+            rectangle: self.x-1, self.y-1, self.width+1, self.height+1
 
     on_press:   self.select()
     orientation:    'horizontal'

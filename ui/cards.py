@@ -12,19 +12,17 @@ from kivy.graphics import Color, Line, Rectangle, Rotate, PopMatrix, PushMatrix
 from kivy.clock import Clock
 
 
-
-
 class BattleCard(ButtonBehavior, Image, BoxLayout):
 
     def __init__(self, field_pos, my_unit, **kwargs):
         self.field_pos = field_pos
         self.my_unit = my_unit
         if self.my_unit:
-            self.border_color = (0, 0.8, 0.5, 0.5)
+            self.border_color = (0, 0.8, 0.5, 0.25)
         else:
-            self.border_color = (0.8, 0, 0.2, 0.5)
+            self.border_color = (0.8, 0, 0.2, 0.25)
+        self.choose_color = (1, 1, 1, 0.0)
         super(BattleCard, self).__init__(**kwargs)
-        #self.source = 'imgs\stab1.png'
 
     def select(self):
         app = App.get_running_app()
@@ -48,8 +46,7 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
 
                 app.root.get_screen("gamefield").children[0].remove_widget(self)
                 app.root.get_screen("gamefield").children[0].add_widget(self)
-                self.border_line = Line(width=3, rectangle=[self.x, self.y, self.width, self.height], )
-                self.canvas.add(self.border_line)
+                self.canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.95)
                 app.selected = {'item': self,
                                 'num': app.root.get_screen("gamefield").children[0].my_units.index(self)}
 
@@ -63,12 +60,10 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
                 app.root.get_screen("gamefield").children[0].remove_widget(self)
                 app.root.get_screen("gamefield").children[0].add_widget(self)
 
-                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.remove(
-                    app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].border_line)
+                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.0)
                 app.selected = {'item': self,
                                 'num': app.root.get_screen("gamefield").children[0].my_units.index(self)}
-                self.border_line = Line(width=3, rectangle=[self.x, self.y, self.width, self.height])
-                self.canvas.add(self.border_line)
+                self.canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.95)
 
     def attack(self):
         app = App.get_running_app()
@@ -102,6 +97,9 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
         animation = Animation(center_y=(self.center_y + self.size[0]//1.5), d=0.8)
         animation.bind(on_complete=self._kill_label)
         animation.start(self.minus_fire_label)
+        app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
+            0].rgba = (1, 1, 1, 0.0)
+        app.selected = None
 
     def _kill_label(self, *args):
         app = App.get_running_app()
@@ -123,8 +121,7 @@ class BattleCardReserve(ButtonBehavior, Image, BoxLayout):
     def selected(self):
         app = App.get_running_app()
         if app.selected:
-            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.remove(
-                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].border_line)
+            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.0)
             app.selected = {}
 
         if self.parent.children.index(self) != app.card_in_reserve and not app.moving:
@@ -169,7 +166,7 @@ class EmptyField(Button):
     def move(self):
         app = App.get_running_app()
         if app.selected:
-            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.remove(app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].border_line)
+            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.0)
             app.occupied_cells.remove(app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos)
             app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos = self.field_pos
             app.occupied_cells.append(self.field_pos)
@@ -202,6 +199,7 @@ class EmptyField(Button):
             app.root.get_screen("gamefield").ids.reserve_cards.data.remove({"card": 'LehrStab'})
             app.root.get_screen("gamefield").ids.reserve_cards.refresh_from_data()
             app.card_in_reserve = None
+            clear_green_blank_cell()
 
     def unblock(self, *args):
         app = App.get_running_app()
