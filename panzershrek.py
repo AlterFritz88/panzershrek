@@ -3,6 +3,8 @@ from kivymd.app import MDApp
 from kivy.core.window import Window
 from kivy.clock import Clock
 
+from ui.game_session import GameSession
+
 
 class PanzerShrek(MDApp):
     selected = None
@@ -24,9 +26,10 @@ class PanzerShrek(MDApp):
         Clock.schedule_once(lambda *args: self.prepear_field())
 
     def prepear_field(self):
-        self.root.get_screen("gamefield").ids.gamefield.new_game()
+        game_session = GameSession()
+        #self.root.get_screen("gamefield").ids.gamefield.new_game()
+
 
 if __name__ == '__main__':
-
     Window.size = (1920//1.5, 1080//1.5)
     PanzerShrek().run()

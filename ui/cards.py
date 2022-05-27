@@ -1,4 +1,5 @@
 from itertools import product, starmap
+import os
 import importlib
 import math
 
@@ -69,7 +70,7 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
         app = App.get_running_app()
         myradians = math.atan2(self.pos[1] - app.selected['item'].pos[1], self.pos[0] - app.selected['item'].pos[0])
         angle = math.degrees(myradians)
-        self.BANG = Bang(source='imgs/bullet.png', pos=app.selected['item'].pos,
+        self.BANG = Bang(source=os.path.join('imgs', 'bullet.png'), pos=app.selected['item'].pos,
                          size=(self.size[0] // 2, self.size[1] // 2),
                          size_hint=(None, None), angle=angle, center_x=app.selected['item'].center_x,
                          center_y=app.selected['item'].center_y)
@@ -86,7 +87,7 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
         animation += Animation(pos=(self.pos[0], self.pos[1]), d=0.1)
         animation.start(self)
         app.root.get_screen("gamefield").children[0].remove_widget(self.BANG)
-        self.BANG = Image(source='imgs/bang.gif', pos=self.pos, size=self.size, size_hint=(None, None), anim_delay=0,
+        self.BANG = Image(source=os.path.join('imgs', 'bang.gif'), pos=self.pos, size=self.size, size_hint=(None, None), anim_delay=0,
                           anim_loop=1)
         app.root.get_screen("gamefield").children[0].add_widget(self.BANG)
         self.health -= app.selected['item'].fire
@@ -184,7 +185,7 @@ class EmptyField(Button):
 
             cards = importlib.import_module("ui.units")
             class_ = getattr(cards, app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve].card)
-            unit = class_(source='imgs/stab1.png', pos=(pos_x, pos_y),
+            unit = class_(source=os.path.join('imgs', 'stab1.png'), pos=(pos_x, pos_y),
                                         size=(app.card_size, app.card_size),
                                         size_hint=(None, None), field_pos=self.field_pos, my_unit=True)
             app.root.get_screen("gamefield").children[0].my_units.append(unit)

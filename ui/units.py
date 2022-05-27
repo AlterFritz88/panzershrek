@@ -1,5 +1,5 @@
+import os
 import ui.cards as cards
-
 
 class LehrStab(cards.BattleCard):
 
@@ -18,5 +18,5 @@ class LehrStab(cards.BattleCard):
         super(LehrStab, self).__init__(field_pos, my_unit, **kwargs)
         self.ids.health.text = str(self.health)
         self.ids.fire.text = str(self.fire)
-        self.source = 'imgs\stab1.png'
+        self.source = os.path.join('imgs', 'stab1.png')
 
