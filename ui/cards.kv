@@ -29,14 +29,14 @@
         spacing:    5
         Label:
             text:   '0'
-            id: health
+            id: health_points
             font_size:  sp(35)
             outline_color:  0,0,0
             outline_width:  5
             size_hint_y:    0.3
         Label:
             text:   '0'
-            id: fire
+            id: attack_points
             font_size:  sp(35)
             color: 0.8,0,0,1
             outline_color:  0,0,0
@@ -52,6 +52,8 @@
     width:  app.root.height // 4.5
     size_hint:  None, None
     on_press:   self.selected()
+    name: ""
+    img: ""
     Widget:
         size_hint_x:    0.8
     BoxLayout:
@@ -60,14 +62,14 @@
         spacing:    5
         Label:
             text:   "12"
-            id: health
+            id: health_points
             font_size:  sp(35)
             outline_color:  0,0,0
             outline_width:  5
             size_hint_y:    0.3
         Label:
             text:   "2"
-            id: fire
+            id: attack_points
             font_size:  sp(35)
             color: 0.8,0,0,1
             outline_color:  0,0,0

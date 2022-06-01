@@ -15,15 +15,24 @@ from kivy.clock import Clock
 
 class BattleCard(ButtonBehavior, Image, BoxLayout):
 
-    def __init__(self, field_pos, my_unit, **kwargs):
+    def __init__(self, field_pos, my_unit, attack_points, health_points, **kwargs):
         self.field_pos = field_pos
         self.my_unit = my_unit
+        self.attack_points = attack_points
+        self.health_points = health_points
+        self.type = 'art'
         if self.my_unit:
             self.border_color = (0, 0.8, 0.5, 0.25)
         else:
             self.border_color = (0.8, 0, 0.2, 0.25)
         self.choose_color = (1, 1, 1, 0.0)
         super(BattleCard, self).__init__(**kwargs)
+        Clock.schedule_once(self.finish_init, 0)
+
+    def finish_init(self, td):
+        self.ids.attack_points.text = str(self.attack_points)
+        self.ids.health_points.text = str(self.health_points)
+        self.source = self.source
 
     def select(self):
         app = App.get_running_app()
@@ -37,8 +46,10 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
             except AttributeError:
                 pass
 
-            cells = list(starmap(lambda a, b: (self.field_pos[0] + a, self.field_pos[1] + b), product((0, -1, +1), (0, -1, +1))))[1:]
-            if app.selected['item'].field_pos in cells or app.selected['item'].type in ('stab', 'art'):     # если карта соседняя, то атакую
+            cells = list(starmap(lambda a, b: (self.field_pos[0] + a, self.field_pos[1] + b),
+                                 product((0, -1, +1), (0, -1, +1))))[1:]
+            if app.selected['item'].field_pos in cells or app.selected['item'].type in (
+            'stab', 'art'):  # если карта соседняя, то атакую
                 self.attack()
 
         if self.my_unit and not app.moving:
@@ -50,18 +61,12 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
                 self.canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.95)
                 app.selected = {'item': self,
                                 'num': app.root.get_screen("gamefield").children[0].my_units.index(self)}
-
-                # добавляю карту в руку
-                temp_data = app.root.get_screen("gamefield").ids.reserve_cards.data[::]
-                temp_data += [{"card": 'LehrStab'}]
-                app.root.get_screen("gamefield").ids.reserve_cards.data = temp_data
-                app.root.get_screen("gamefield").ids.reserve_cards.refresh_from_data()
-
             else:
                 app.root.get_screen("gamefield").children[0].remove_widget(self)
                 app.root.get_screen("gamefield").children[0].add_widget(self)
 
-                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.0)
+                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
+                    0].rgba = (1, 1, 1, 0.0)
                 app.selected = {'item': self,
                                 'num': app.root.get_screen("gamefield").children[0].my_units.index(self)}
                 self.canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.95)
@@ -87,15 +92,16 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
         animation += Animation(pos=(self.pos[0], self.pos[1]), d=0.1)
         animation.start(self)
         app.root.get_screen("gamefield").children[0].remove_widget(self.BANG)
-        self.BANG = Image(source=os.path.join('imgs', 'bang.gif'), pos=self.pos, size=self.size, size_hint=(None, None), anim_delay=0,
+        self.BANG = Image(source=os.path.join('imgs', 'bang.gif'), pos=self.pos, size=self.size, size_hint=(None, None),
+                          anim_delay=0,
                           anim_loop=1)
         app.root.get_screen("gamefield").children[0].add_widget(self.BANG)
-        self.health -= app.selected['item'].fire
-        self.ids.health.text = str(self.health)
-        self.minus_fire_label = MinusLabel(text=str(-app.selected['item'].fire), center_x=self.center_x,
+        self.health_points -= app.selected['item'].attack_points
+        self.ids.health_points.text = str(self.health_points)
+        self.minus_fire_label = MinusLabel(text=str(-app.selected['item'].attack_points), center_x=self.center_x,
                                            center_y=self.center_y)
         app.root.get_screen("gamefield").children[0].add_widget(self.minus_fire_label)
-        animation = Animation(center_y=(self.center_y + self.size[0]//1.5), d=0.8)
+        animation = Animation(center_y=(self.center_y + self.size[0] // 1.5), d=0.8)
         animation.bind(on_complete=self._kill_label)
         animation.start(self.minus_fire_label)
         app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
@@ -109,20 +115,24 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
 
 class BattleCardReserve(ButtonBehavior, Image, BoxLayout):
 
-    def __init__(self, **kwargs):
+    def __init__(self, attack_points, health_points, **kwargs):
         super(BattleCardReserve, self).__init__(**kwargs)
         Clock.schedule_once(self.finish_init, 0)
+        self.health_points = health_points
+        self.attack_points = attack_points
 
     def finish_init(self, td):
-        cards = importlib.import_module("ui.units")
-        class_ = getattr(cards, self.card)
-        a = class_((14, 88), True)
-        self.source = a.source
+        self.ids.attack_points.text = str(self.attack_points)
+        self.ids.health_points.text = str(self.health_points)
+        self.source = self.source
 
     def selected(self):
         app = App.get_running_app()
+        if app.moving:
+            return
         if app.selected:
-            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.0)
+            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
+                0].rgba = (1, 1, 1, 0.0)
             app.selected = {}
 
         if self.parent.children.index(self) != app.card_in_reserve and not app.moving:
@@ -132,7 +142,8 @@ class BattleCardReserve(ButtonBehavior, Image, BoxLayout):
             self.pos[1] = self.pos[1] + 50
             app.card_in_reserve = self.parent.children.index(self)
 
-            draw_widget = [x for x in app.root.get_screen("gamefield").ids.gamefield.children if str(type(x)) == "<class 'ui.cards.EmptyField'>" and x.field_pos in ([0,1], [1,1], [1,0])]
+            draw_widget = [x for x in app.root.get_screen("gamefield").ids.gamefield.children if
+                           str(type(x)) == "<class 'ui.cards.EmptyField'>" and x.field_pos in ([0, 1], [1, 1], [1, 0])]
             for wid in draw_widget:
                 color = Color(0.1, 0.7, 0.3, 0.15)
                 rect = Rectangle(pos=wid.pos, size=(wid.width, wid.width))
@@ -156,10 +167,16 @@ def clear_green_blank_cell():
         wid.draw_obj = []
 
 
+def unblock(*args):
+    app = App.get_running_app()
+    app.card_in_reserve = None
+    app.moving = False
+
+
 class EmptyField(Button):
 
     def __init__(self, **kwargs):
-        #self.field_pos = field_pos
+        # self.field_pos = field_pos
 
         self.draw_obj = []
         super(EmptyField, self).__init__(**kwargs)
@@ -167,49 +184,48 @@ class EmptyField(Button):
     def move(self):
         app = App.get_running_app()
         if app.selected:
-            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.0)
-            app.occupied_cells.remove(app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos)
+            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
+                0].rgba = (1, 1, 1, 0.0)
+            app.occupied_cells.remove(
+                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos)
             app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos = self.field_pos
             app.occupied_cells.append(self.field_pos)
 
             animation = Animation(pos=self.pos)
             app.moving = True
-            animation.bind(on_complete=self.unblock)
+            animation.bind(on_complete=unblock)
             animation.start(app.selected['item'])
             app.selected = None
             return
 
         if app.card_in_reserve is not None and self.field_pos in ([0, 1], [1, 1], [1, 0]):
-            pos_x = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve].pos[0] + app.card_size
+
+            unit = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve]
+            parent = app.root.get_screen("gamefield").ids.reserve_cards.to_parent(*unit.pos)
+
+            pos_x = parent[0]
             pos_y = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve].pos[1]
 
-            cards = importlib.import_module("ui.units")
-            class_ = getattr(cards, app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve].card)
-            unit = class_(source=os.path.join('imgs', 'stab1.png'), pos=(pos_x, pos_y),
-                                        size=(app.card_size, app.card_size),
-                                        size_hint=(None, None), field_pos=self.field_pos, my_unit=True)
+            unit1 = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve]
+            unit = BattleCard(field_pos=self.field_pos, my_unit=True,
+                              attack_points=unit1.attack_points, health_points=unit1.health_points,
+                              size_hint=(None, None),
+                              size=(app.card_size, app.card_size), source=unit1.source, pos=(pos_x, pos_y))
+
             app.root.get_screen("gamefield").children[0].my_units.append(unit)
             app.root.get_screen("gamefield").children[0].add_widget(unit)
             app.root.get_screen("gamefield").children[0].my_units.append(unit)
             app.occupied_cells.append(self.field_pos)
             animation = Animation(pos=self.pos)
             app.moving = True
-            animation.bind(on_complete=self.unblock)
+            animation.bind(on_complete=unblock)
             animation.start(unit)
-            app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.remove_widget(app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve])
-            app.root.get_screen("gamefield").ids.reserve_cards.data.remove({"card": 'LehrStab'})
-            app.root.get_screen("gamefield").ids.reserve_cards.refresh_from_data()
-            app.card_in_reserve = None
+            app.root.get_screen("gamefield").ids.reserve_cards.children[0].remove_widget(unit1)
             clear_green_blank_cell()
-
-    def unblock(self, *args):
-        app = App.get_running_app()
-        app.moving = False
 
 
 class Bang(Image):
     def __init__(self, angle, **kwargs):
-
         super(Bang, self).__init__(**kwargs)
         self.rotate = Rotate(angle=angle)
         self.rotate.origin = self.center

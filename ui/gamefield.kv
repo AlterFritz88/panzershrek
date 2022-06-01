@@ -14,7 +14,13 @@
             size_hint_y:    0.3
             padding: 5
             Widget:
-                size_hint_x:    0.25
+                size_hint_x:    0.2
+            Label:
+                text:   '12'
+                size_hint_x:    0.05
+                text_size: self.size
+                valign: "bottom"
+                id:     my_player_fuel
             GameField:
                 id: gamefield
                 EmptyField:
@@ -61,6 +67,7 @@
             FloatLayout:
                 size_hint_x:    0.25
                 id: stack
+
                 Image:
                     id: card_1
                     source: 'imgs/skirt.png'
@@ -105,10 +112,9 @@
             Widget:
                 size_hint_x:    0.15
 
-<RV@RecycleView>:
-    viewclass: 'BattleCardReserve'
-    data:   [{"card": 'LehrStab'} for x in range(4)]
-    RecycleBoxLayout:
+<RV@ScrollView>:
+    BoxLayout:
+
         default_size: None, None
         default_size_hint: None, None
         size_hint_x: None

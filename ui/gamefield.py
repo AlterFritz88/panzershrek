@@ -3,7 +3,7 @@ from kivy.graphics import Color, Rectangle
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 
-from .units import LehrStab
+from .units import Stab
 
 
 # class GameField(FloatLayout):
