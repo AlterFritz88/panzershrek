@@ -1,0 +1,16 @@
+<WaitingPartner@Screen>
+    name: "waiting_partner_screen"
+    FloatLayout:
+        Label:
+            text:   "Looking for a partner"
+            pos_hint:    {"center_x": 0.5, "center_y": 0.3}
+        Image:
+            id: gif
+            source: 'imgs/gear.gif'
+            pos_hint:    {"center_x": 0.5, "center_y": 0.6}
+            size_hint: 0.4, 0.4
+            size: root.size
+            allow_stretch: True
+            keep_ratio: True
+            #anim_delay: -1
+            #anim_loop: 1

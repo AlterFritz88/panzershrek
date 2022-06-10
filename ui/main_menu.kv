@@ -1,0 +1,9 @@
+<MainMenu@Screen>
+    name: "main_menu"
+    FloatLayout:
+        Button:
+            id: start_game
+            pos_hint:    {"center_x": 0.5, "center_y": 0.5}
+            text:   "Start new game"
+            size_hint:  (0.2, 0.1)
+            on_press:   app.start_new_game()

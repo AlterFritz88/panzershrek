@@ -6,23 +6,46 @@
 
 <GameScreen@Screen>
     name: "gamefield"
+
     BoxLayout:
         orientation:    "vertical"
+        spacing:    6
+        BoxLayout:
+            size_hint_y: 0.15
+            #size_hint_x: None
+            padding: 5
+            orientation:    "horizontal"
+            Widget:
+                size_hint_x:    0.2
+            EnemyReserveCards:
+                id: enemy_reserve_cards
+                size_hint_x:    0.6
+            Widget:
+                size_hint_x:    0.2
 
         BoxLayout:
             orientation:    'horizontal'
-            size_hint_y:    0.3
-            padding: 5
-            Widget:
+            size_hint_y:    0.2
+            padding: 3
+            spacing:    2
+#            Widget:
+#                size_hint_x:    0.2
+            BoxLayout:
+                orientation:    'horizontal'
                 size_hint_x:    0.2
-            Label:
-                text:   '12'
-                size_hint_x:    0.05
-                text_size: self.size
-                valign: "bottom"
-                id:     my_player_fuel
+                Label:
+                    text:   '12'
+                    text_size: self.size
+                    valign: "bottom"
+                    id:     my_player_fuel
+                Label:
+                    text:   '+4'
+                    text_size: self.size
+                    valign: "bottom"
+                    id:     my_player_fuel_add
             GameField:
                 id: gamefield
+                #size_hint_x:    0.4
                 EmptyField:
                     field_pos: (2, 0)
                     id: 2,0
@@ -56,14 +79,23 @@
                     field_pos: (0, 3)
                 EmptyField:
                     field_pos: (0, 4)
-
             Widget:
-                size_hint_x:    0.1
+                size_hint_x:    0.2
+            BoxLayout:
+                orientation:    'vertical'
+                size_hint_x:    0.15
+                Widget:
+                    size_hint_y:    0.8
+                MDFillRoundFlatIconButton:
+                    text:   "End turn"
+                    pos_hint: {"center_x": 0.1, "center_y": 0.1}
+                    icon:   'timer-sand'
+                    on_press:   app.game_session.next_turn()
         Widget:
-            size_hint_y:    0.1
+            size_hint_y:    0.2
         BoxLayout:
             orientation:    'horizontal'
-            size_hint_y:    0.2
+            size_hint_y:    0.15
             FloatLayout:
                 size_hint_x:    0.25
                 id: stack
@@ -112,6 +144,8 @@
             Widget:
                 size_hint_x:    0.15
 
+
+
 <RV@ScrollView>:
     BoxLayout:
 
@@ -123,6 +157,21 @@
         orientation: 'horizontal'
         id:     rs
         spacing:    3
+
+
+<EnemyReserveCards@ScrollView>:
+    BoxLayout:
+        orientation:    "horizontal"
+        default_size: None, None
+        default_size_hint: None, None
+        size_hint_x: None
+        #width: self.minimum_width
+        #height: self.minimum_height
+        spacing:    3
+
+
+
+
 
 
 

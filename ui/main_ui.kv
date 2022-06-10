@@ -1,7 +1,10 @@
 #:include ui/gamefield.kv
 #:include ui/cards.kv
+#:include ui/waiting_partner_screen.kv
+#:include ui/main_menu.kv
 
 ScreenManager:
-    size_hint_y:    0.85
     id: sm
+    MainMenu:
+    WaitingPartner:
     GameScreen:

@@ -1,3 +1,4 @@
+import time
 from itertools import product, starmap
 import os
 import importlib
@@ -11,16 +12,20 @@ from kivy.animation import Animation
 from kivy.app import App
 from kivy.graphics import Color, Line, Rectangle, Rotate, PopMatrix, PushMatrix
 from kivy.clock import Clock
+from ui import game_session as gs
 
 
 class BattleCard(ButtonBehavior, Image, BoxLayout):
 
-    def __init__(self, field_pos, my_unit, attack_points, health_points, **kwargs):
+    def __init__(self, field_pos, my_unit, attack_points, health_points, price, fuel_add, unit_type, **kwargs):
+        self.allowed_position_for_move = None
         self.field_pos = field_pos
         self.my_unit = my_unit
         self.attack_points = attack_points
         self.health_points = health_points
-        self.type = 'art'
+        self.unit_type = unit_type
+        self.fuel_add = fuel_add
+        self.can_move = True
         if self.my_unit:
             self.border_color = (0, 0.8, 0.5, 0.25)
         else:
@@ -45,12 +50,14 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
                 app.root.get_screen("gamefield").children[0].remove_widget(self.BANG)
             except AttributeError:
                 pass
-
-            cells = list(starmap(lambda a, b: (self.field_pos[0] + a, self.field_pos[1] + b),
-                                 product((0, -1, +1), (0, -1, +1))))[1:]
-            if app.selected['item'].field_pos in cells or app.selected['item'].type in (
-            'stab', 'art'):  # если карта соседняя, то атакую
+            #clear_green_blank_cell()
+            if app.selected['item'].unit_type in ('stab', 'art'):
                 self.attack()
+            else:
+                cells = list(starmap(lambda a, b: (app.selected["item"].field_pos[0] + a, app.selected["item"].field_pos[1] + b),
+                                     product((0, -1, +1), (0, -1, +1))))
+                if tuple(self.field_pos) in cells:
+                    self.attack()
 
         if self.my_unit and not app.moving:
             clear_green_blank_cell()
@@ -61,15 +68,44 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
                 self.canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.95)
                 app.selected = {'item': self,
                                 'num': app.root.get_screen("gamefield").children[0].my_units.index(self)}
+
+                if self.can_move:
+                    if self.unit_type in ('heavy_tank', 'AT', 'art'):
+                        self.allowed_position_for_move = ([self.field_pos[0] + 1, self.field_pos[1]],
+                                                           [self.field_pos[0] - 1, self.field_pos[1]],
+                                                           [self.field_pos[0], self.field_pos[1] + 1],
+                                                           [self.field_pos[0], self.field_pos[1] - 1])
+                    elif self.unit_type == "middle_tank":
+                        self.allowed_position_for_move = ([self.field_pos[0] + 1, self.field_pos[1]],
+                                                          [self.field_pos[0] - 1, self.field_pos[1]],
+                                                          [self.field_pos[0], self.field_pos[1] + 1],
+                                                          [self.field_pos[0], self.field_pos[1] - 1])
+                    elif self.unit_type == "light_tank":
+                        self.allowed_position_for_move = list(
+                            starmap(lambda a, b: [self.field_pos[0] + a, self.field_pos[1] + b],
+                                    product((0, -1, +1), (0, -1, +1))))
+                    elif self.unit_type == "armored_car":
+                        self.allowed_position_for_move = list(starmap(lambda a, b: [self.field_pos[0] + a, self.field_pos[1] + b],
+                                         product((0, -2, +2, -1, +1), (0, -2, +2, -1, +1))))
+
+                    elif self.unit_type == "stab":
+                        self.allowed_position_for_move = []
+
+                    draw_widget = [x for x in app.root.get_screen("gamefield").ids.gamefield.children if
+                                   str(type(x)) == "<class 'ui.cards.EmptyField'>" and x.field_pos in
+                                   self.allowed_position_for_move]
+                    paint_fields_in_green(draw_widget)
             else:
                 app.root.get_screen("gamefield").children[0].remove_widget(self)
                 app.root.get_screen("gamefield").children[0].add_widget(self)
 
-                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
-                    0].rgba = (1, 1, 1, 0.0)
-                app.selected = {'item': self,
-                                'num': app.root.get_screen("gamefield").children[0].my_units.index(self)}
-                self.canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.95)
+                if app.selected["item"] == self:
+                    self.canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.0)
+                    app.selected = None
+                else:
+                    app.selected["item"].canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.0)
+                    app.selected = None
+                    self.select()
 
     def attack(self):
         app = App.get_running_app()
@@ -106,20 +142,33 @@ class BattleCard(ButtonBehavior, Image, BoxLayout):
         animation.start(self.minus_fire_label)
         app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
             0].rgba = (1, 1, 1, 0.0)
+        app.selected['item'].disable()
         app.selected = None
 
     def _kill_label(self, *args):
         app = App.get_running_app()
         app.root.get_screen("gamefield").children[0].remove_widget(self.minus_fire_label)
 
+    def disable(self):
+        self.opacity = 0.7
+        self.disabled = True
+
+    def enable(self):
+        self.opacity = 1
+        self.disabled = False
+        self.can_move = True
+
 
 class BattleCardReserve(ButtonBehavior, Image, BoxLayout):
 
-    def __init__(self, attack_points, health_points, **kwargs):
+    def __init__(self, attack_points, health_points, price, fuel_add, unit_type, **kwargs):
         super(BattleCardReserve, self).__init__(**kwargs)
         Clock.schedule_once(self.finish_init, 0)
         self.health_points = health_points
         self.attack_points = attack_points
+        self.price = price
+        self.unit_type = unit_type
+        self.fuel_add = fuel_add
 
     def finish_init(self, td):
         self.ids.attack_points.text = str(self.attack_points)
@@ -138,77 +187,73 @@ class BattleCardReserve(ButtonBehavior, Image, BoxLayout):
         if self.parent.children.index(self) != app.card_in_reserve and not app.moving:
             clear_green_blank_cell()
             if app.card_in_reserve is not None:
-                self.parent.children[app.card_in_reserve].pos[1] -= 50
-            self.pos[1] = self.pos[1] + 50
+                self.parent.children[app.card_in_reserve].pos[1] -= self.size[0]//5
+            self.pos[1] = self.pos[1] + self.size[0]//5
             app.card_in_reserve = self.parent.children.index(self)
 
             draw_widget = [x for x in app.root.get_screen("gamefield").ids.gamefield.children if
                            str(type(x)) == "<class 'ui.cards.EmptyField'>" and x.field_pos in ([0, 1], [1, 1], [1, 0])]
-            for wid in draw_widget:
-                color = Color(0.1, 0.7, 0.3, 0.15)
-                rect = Rectangle(pos=wid.pos, size=(wid.width, wid.width))
-                wid.canvas.add(color)
-                wid.canvas.add(rect)
-                wid.draw_obj = [color, rect]
+            paint_fields_in_green(draw_widget)
         else:
             if app.card_in_reserve is not None:
                 clear_green_blank_cell()
-                self.pos[1] = self.pos[1] - 50
+                self.pos[1] = self.pos[1] - self.size[0]//5
                 app.card_in_reserve = None
 
 
 def clear_green_blank_cell():
     app = App.get_running_app()
     draw_widget = [x for x in app.root.get_screen("gamefield").ids.gamefield.children if
-                   str(type(x)) == "<class 'ui.cards.EmptyField'>" and x.field_pos in ([0, 1], [1, 1], [1, 0])]
+                   str(type(x)) == "<class 'ui.cards.EmptyField'>"]
     for wid in draw_widget:
         for obj in wid.draw_obj:
             wid.canvas.remove(obj)
         wid.draw_obj = []
 
 
-def unblock(*args):
-    app = App.get_running_app()
-    app.card_in_reserve = None
-    app.moving = False
-
-
 class EmptyField(Button):
 
     def __init__(self, **kwargs):
         # self.field_pos = field_pos
-
-        self.draw_obj = []
         super(EmptyField, self).__init__(**kwargs)
+        self.draw_obj = []
 
     def move(self):
         app = App.get_running_app()
         if app.selected:
-            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
-                0].rgba = (1, 1, 1, 0.0)
-            app.occupied_cells.remove(
-                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos)
-            app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos = self.field_pos
-            app.occupied_cells.append(self.field_pos)
+            if self.field_pos in app.selected['item'].allowed_position_for_move:
+                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
+                    0].rgba = (1, 1, 1, 0.0)
+                app.occupied_cells.remove(
+                    app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos)
+                app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos = self.field_pos
+                app.occupied_cells.append(self.field_pos)
 
-            animation = Animation(pos=self.pos)
-            app.moving = True
-            animation.bind(on_complete=unblock)
-            animation.start(app.selected['item'])
-            app.selected = None
-            return
+                animation = Animation(pos=self.pos, duration=0.3)
+                app.moving = True
+                animation.bind(on_complete=lambda *x: unblock(app.selected['item']))
+                animation.start(app.selected['item'])
+                app.selected['item'].can_move = False
+                return
 
         if app.card_in_reserve is not None and self.field_pos in ([0, 1], [1, 1], [1, 0]):
 
             unit = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve]
             parent = app.root.get_screen("gamefield").ids.reserve_cards.to_parent(*unit.pos)
-
             pos_x = parent[0]
+            if unit.price > int(app.root.get_screen("gamefield").ids.my_player_fuel.text):
+                animation = Animation(pos=(unit.pos[0] + 5, unit.pos[1]), duration=0.05)
+                animation += Animation(pos=(unit.pos[0] - 10, unit.pos[1]), duration=0.05)
+                animation += Animation(pos=(unit.pos[0], unit.pos[1]), duration=0.05)
+                animation.start(unit)
+                return
+
             pos_y = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve].pos[1]
 
             unit1 = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve]
             unit = BattleCard(field_pos=self.field_pos, my_unit=True,
                               attack_points=unit1.attack_points, health_points=unit1.health_points,
+                              fuel_add=unit1.fuel_add, unit_type=unit1.unit_type, price=unit1.price,
                               size_hint=(None, None),
                               size=(app.card_size, app.card_size), source=unit1.source, pos=(pos_x, pos_y))
 
@@ -216,11 +261,13 @@ class EmptyField(Button):
             app.root.get_screen("gamefield").children[0].add_widget(unit)
             app.root.get_screen("gamefield").children[0].my_units.append(unit)
             app.occupied_cells.append(self.field_pos)
-            animation = Animation(pos=self.pos)
+            animation = Animation(pos=self.pos, duration=0.3)
             app.moving = True
-            animation.bind(on_complete=unblock)
+            animation.bind(on_complete=lambda *x: unblock(unit))
             animation.start(unit)
             app.root.get_screen("gamefield").ids.reserve_cards.children[0].remove_widget(unit1)
+            app.root.get_screen("gamefield").ids.my_player_fuel.text = str(int(app.root.get_screen("gamefield").ids.my_player_fuel.text) - unit1.price)
+            app.root.get_screen("gamefield").ids.my_player_fuel_add.text = gs.next_step_fuel_adding()
             clear_green_blank_cell()
 
 
@@ -242,3 +289,31 @@ class Bang(Image):
 
 class MinusLabel(Label):
     pass
+
+
+def paint_fields_in_green(fields_widgets):
+    for wid in fields_widgets:
+        color = Color(0.1, 0.7, 0.3, 0.15)
+        rect = Rectangle(pos=wid.pos, size=(wid.width, wid.width))
+        wid.canvas.add(color)
+        wid.canvas.add(rect)
+        wid.draw_obj = [color, rect]
+
+
+def unblock(unit):
+    app = App.get_running_app()
+    if app.card_in_reserve:
+        if unit.unit_type in ("art", 'heavy_tank', 'middle_tank', 'AT', 'light_tank'):
+            unit.disable()
+        app.card_in_reserve = None
+    unit.allowed_position_for_move = []
+    app.moving = False
+    app.selected = None
+    clear_green_blank_cell()
+
+
+class EnemyReserveCard(Image):
+    app = App.get_running_app()
+    source = os.path.join('imgs', 'skirt.png')
+    size_hint = (None, None)
+    #size = (app.card_size, app.card_size)
