@@ -13,11 +13,12 @@ from kivy.app import App
 from kivy.graphics import Color, Line, Rectangle, Rotate, PopMatrix, PushMatrix
 from kivy.clock import Clock
 from ui import game_session as gs
+from connection_service import card_from_reserve, my_turn
 
 
 class BattleCard(ButtonBehavior, Image, BoxLayout):
 
-    def __init__(self, field_pos, my_unit, attack_points, health_points, price, fuel_add, unit_type, **kwargs):
+    def __init__(self, field_pos, my_unit, attack_points, health_points, price, fuel_add, unit_type, name, **kwargs):
         self.allowed_position_for_move = None
         self.field_pos = field_pos
         self.my_unit = my_unit
@@ -224,19 +225,17 @@ class EmptyField(Button):
             if self.field_pos in app.selected['item'].allowed_position_for_move:
                 app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].canvas.after.get_group('a')[
                     0].rgba = (1, 1, 1, 0.0)
-                app.occupied_cells.remove(
-                    app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos)
                 app.root.get_screen("gamefield").children[0].my_units[app.selected['num']].field_pos = self.field_pos
-                app.occupied_cells.append(self.field_pos)
 
                 animation = Animation(pos=self.pos, duration=0.3)
                 app.moving = True
                 animation.bind(on_complete=lambda *x: unblock(app.selected['item']))
                 animation.start(app.selected['item'])
                 app.selected['item'].can_move = False
+                my_turn(','.join([str(x) for x in app.selected.filed_pos]), ','.join([str(x) for x in self.field_pos]), False)
                 return
 
-        if app.card_in_reserve is not None and self.field_pos in ([0, 1], [1, 1], [1, 0]):
+        if app.card_in_reserve is not None and self.field_pos in ([0, 1], [1, 1], [1, 0]) and not app.enemy_turn:
 
             unit = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve]
             parent = app.root.get_screen("gamefield").ids.reserve_cards.to_parent(*unit.pos)
@@ -251,7 +250,7 @@ class EmptyField(Button):
             pos_y = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve].pos[1]
 
             unit1 = app.root.get_screen("gamefield").ids.reserve_cards.ids.rs.children[app.card_in_reserve]
-            unit = BattleCard(field_pos=self.field_pos, my_unit=True,
+            unit = BattleCard(field_pos=self.field_pos, my_unit=True, name=unit1.name,
                               attack_points=unit1.attack_points, health_points=unit1.health_points,
                               fuel_add=unit1.fuel_add, unit_type=unit1.unit_type, price=unit1.price,
                               size_hint=(None, None),
@@ -268,6 +267,11 @@ class EmptyField(Button):
             app.root.get_screen("gamefield").ids.reserve_cards.children[0].remove_widget(unit1)
             app.root.get_screen("gamefield").ids.my_player_fuel.text = str(int(app.root.get_screen("gamefield").ids.my_player_fuel.text) - unit1.price)
             app.root.get_screen("gamefield").ids.my_player_fuel_add.text = gs.next_step_fuel_adding()
+
+            card_from_reserve(app.card_in_reserve, ",".join([str(x) for x in self.field_pos]), unit1.name, unit1.source, unit1.unit_type,
+                              unit1.attack_points,
+                              unit1.health_points, unit1.fuel_add, unit1.price, app.card_in_reserve)
+
             clear_green_blank_cell()
 
 

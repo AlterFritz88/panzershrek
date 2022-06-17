@@ -2,18 +2,21 @@ import json, random, os
 from threading import Thread
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.animation import Animation
 from ui.gamefield import BattleField
 from ui.cards import BattleCardReserve, BattleCard, EnemyReserveCard
-from connection_service import give_me_a_partner
+from connection_service import give_me_a_partner, my_turn_ends
 
 
 class GameSession:
     enemy = 'ai'
     status = 'my_step'
 
+
     def __init__(self):
         app = App.get_running_app()
         app.enemy = None
+        app.card_from_reserve = None
 
     def give_me_a_partner(self):
         give_me_a_partner()
@@ -25,7 +28,6 @@ class GameSession:
         app = App.get_running_app()
         while True:
             if app.enemy:
-
                 Clock.schedule_once(self.render_field)
                 break
             else:
@@ -42,7 +44,7 @@ class GameSession:
         app = App.get_running_app()
         app.card_size = app.root.get_screen("gamefield").ids["0,0"].height
         headquarter_my = BattleCard(field_pos=(0, 0), my_unit=True, attack_points=1, health_points=20, price=0,
-                                    fuel_add=4,
+                                    fuel_add=4, name="LehrStab",
                                     unit_type="stab",
                                     pos=app.root.get_screen("gamefield").ids['0,0'].pos,
                                     size=(app.card_size, app.card_size), size_hint=(None, None),
@@ -51,7 +53,7 @@ class GameSession:
         app.root.get_screen("gamefield").children[0].add_widget(headquarter_my)
 
         headquarter_enemy = BattleCard(field_pos=(2, 4), my_unit=False, attack_points=1, health_points=20,
-                                       price=0, fuel_add=4, unit_type="stab",
+                                       price=0, fuel_add=4, unit_type="stab", name="LehrStab",
                                        pos=app.root.get_screen("gamefield").ids['2,4'].pos,
                                        size=(app.card_size, app.card_size),
                                        size_hint=(None, None), source=os.path.join('imgs', 'stab1.png'))
@@ -60,16 +62,24 @@ class GameSession:
         app.occupied_cells.append((0, 0))
         self.my_player.load_deck()
         self.give_reserve_card(6)
-        enemy_reserve_cards = [EnemyReserveCard(size=(app.card_size//1.5, app.card_size//1.5)) for x in range(6)]
-        for enemy_reserve_card in enemy_reserve_cards:
-            app.root.get_screen("gamefield").ids.enemy_reserve_cards.children[0].add_widget(enemy_reserve_card)
+        render_enemy_new_reserve_card(6)
         app.root.get_screen("gamefield").ids.my_player_fuel.text = str(count_current_fuel())
 
+        if app.enemy['first']:
+            block_ui_for_enemy_turn()
+            app.enemies_end_turn = False
+            app.enemy_turn = True
+            app.enemies_turn = False
+            wait_enemy_turn_thread = Thread(target=self.wait_another_player)
+            wait_enemy_turn_thread.daemon = True
+            wait_enemy_turn_thread.start()
+        else:
+            app.enemy_turn = False
 
     def give_reserve_card(self, num_cards):
         app = App.get_running_app()
         random.shuffle(self.my_player.deck)
-        random_init_reserv_cards = [self.my_player.deck.pop(x) for x in num_cards * [0]]  # удаляю 6 элементов из деки
+        random_init_reserv_cards = [self.my_player.deck.pop(x) for x in num_cards * [0]]
 
         for unit in random_init_reserv_cards:
             app.root.get_screen("gamefield").ids.reserve_cards.children[0].add_widget(
@@ -83,13 +93,31 @@ class GameSession:
         app.root.get_screen("gamefield").ids.my_player_fuel.text = str(
             int(app.root.get_screen("gamefield").ids.my_player_fuel.text) + int(next_step_fuel_adding()))
         self.give_reserve_card(1)
-        units_to_be_free = [x for x in app.root.get_screen("gamefield").children[0].children if
-                            str(type(x)) == "<class 'ui.cards.BattleCard'>"]
-        for unit in units_to_be_free:
-            unit.enable()
+        # units_to_be_free = [x for x in app.root.get_screen("gamefield").children[0].children if
+        #                     str(type(x)) == "<class 'ui.cards.BattleCard'>"]
+        # for unit in units_to_be_free:
+        #     unit.enable()
+        block_ui_for_enemy_turn()
+        my_turn_ends()
+        app.enemy_turn = True
+        app.enemies_end_turn = False
+        app.enemies_turn = False
+        wait_enemy_turn_thread = Thread(target=self.wait_another_player)
+        wait_enemy_turn_thread.daemon = True
+        wait_enemy_turn_thread.start()
 
     def wait_another_player(self):
-        pass
+        app = App.get_running_app()
+        while app.enemy_turn:
+            if app.card_from_reserve:
+                render_enemies_reserve_spawn()
+            if app.enemies_end_turn:
+                unblock_my_units()
+                render_enemy_new_reserve_card(1)
+                app.enemy_turn = False
+            if app.enemies_turn:
+                render_enemies_turn()
+                app.enemies_turn = False
 
 
 def count_current_fuel(my_army=True):
@@ -116,6 +144,13 @@ def next_step_fuel_adding(my_army=True):
     return temp_fuel
 
 
+def render_enemy_new_reserve_card(num_cards):
+    app = App.get_running_app()
+    enemy_reserve_cards = [EnemyReserveCard(size=(app.card_size // 1.5, app.card_size // 1.5)) for x in range(num_cards)]
+    for enemy_reserve_card in enemy_reserve_cards:
+        app.root.get_screen("gamefield").ids.enemy_reserve_cards.children[0].add_widget(enemy_reserve_card)
+
+
 class Player:
     deck = []
 
@@ -136,3 +171,46 @@ class PlayerUnit:
         self.price = price
         self.fuel_add = fuel_add
         self.unit_type = unit_type
+
+
+def block_ui_for_enemy_turn():
+    app = App.get_running_app()
+    units_to_be_blocked = [x for x in app.root.get_screen("gamefield").children[0].children if
+                        str(type(x)) == "<class 'ui.cards.BattleCard'>" and x.my_unit]
+    for unit in units_to_be_blocked:
+        unit.disable()
+
+
+def unblock_my_units():
+    app = App.get_running_app()
+    units_to_be_unblocked = [x for x in app.root.get_screen("gamefield").children[0].children if
+                           str(type(x)) == "<class 'ui.cards.BattleCard'>" and x.my_unit]
+    for unit in units_to_be_unblocked:
+        unit.enable()
+
+
+def render_enemies_reserve_spawn():
+    app = App.get_running_app()
+    unit_relative_pos = app.root.get_screen("gamefield").ids.enemy_reserve_cards.children[0].children[
+        app.card_from_reserve["card_in_reserve"]].pos
+    start_pos = [unit_relative_pos[0], app.root.get_screen("gamefield").ids.enemy_reserve_cards.pos[1]]
+    new_enemy_unit = BattleCard(field_pos=app.card_from_reserve["finish_pos"], my_unit=False,
+                                name=app.card_from_reserve["unit_name"],
+                                attack_points=app.card_from_reserve["unit_defence_points"],
+                                health_points=app.card_from_reserve["unit_defence_points"],
+                                fuel_add=app.card_from_reserve["unit_name"],
+                                unit_type=app.card_from_reserve["unit_type"], price=app.card_from_reserve["unit_name"],
+                                size_hint=(None, None),
+                                size=(app.card_size, app.card_size), source=app.card_from_reserve["unit_source"],
+                                pos=start_pos)
+    app.root.get_screen("gamefield").children[0].add_widget(new_enemy_unit)
+    animation = Animation(pos=app.root.get_screen("gamefield").ids[new_enemy_unit.field_pos].pos, duration=0.3)
+    animation.start(new_enemy_unit)
+    app.root.get_screen("gamefield").ids.enemy_reserve_cards.children[0].remove_widget(
+        app.root.get_screen("gamefield").ids.enemy_reserve_cards.children[0].children[
+            app.card_from_reserve["card_in_reserve"]])
+    app.card_from_reserve = None
+
+
+def render_enemies_turn():
+    pass
