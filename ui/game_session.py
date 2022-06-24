@@ -4,7 +4,7 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.animation import Animation
 from ui.gamefield import BattleField
-from ui.cards import BattleCardReserve, BattleCard, EnemyReserveCard
+from ui.cards import BattleCardReserve, BattleCard, EnemyReserveCard, clear_green_blank_cell
 from connection_service import give_me_a_partner, my_turn_ends
 
 
@@ -58,8 +58,6 @@ class GameSession:
                                        size=(app.card_size, app.card_size),
                                        size_hint=(None, None), source=os.path.join('imgs', 'stab1.png'))
         app.root.get_screen("gamefield").children[0].add_widget(headquarter_enemy)
-        app.occupied_cells.append((2, 4))
-        app.occupied_cells.append((0, 0))
         self.my_player.load_deck()
         self.give_reserve_card(6)
         render_enemy_new_reserve_card(6)
@@ -99,9 +97,13 @@ class GameSession:
         #     unit.enable()
         block_ui_for_enemy_turn()
         my_turn_ends()
+        if app.selected:
+            app.selected['item'].canvas.after.get_group('a')[0].rgba = (1, 1, 1, 0.0)
+            app.selected = None
         app.enemy_turn = True
         app.enemies_end_turn = False
         app.enemies_turn = False
+        clear_green_blank_cell()
         wait_enemy_turn_thread = Thread(target=self.wait_another_player)
         wait_enemy_turn_thread.daemon = True
         wait_enemy_turn_thread.start()
@@ -117,7 +119,7 @@ class GameSession:
                 app.enemy_turn = False
             if app.enemies_turn:
                 render_enemies_turn()
-                app.enemies_turn = False
+                app.enemies_turn = None
 
 
 def count_current_fuel(my_army=True):
@@ -194,6 +196,7 @@ def render_enemies_reserve_spawn():
     unit_relative_pos = app.root.get_screen("gamefield").ids.enemy_reserve_cards.children[0].children[
         app.card_from_reserve["card_in_reserve"]].pos
     start_pos = [unit_relative_pos[0], app.root.get_screen("gamefield").ids.enemy_reserve_cards.pos[1]]
+
     new_enemy_unit = BattleCard(field_pos=app.card_from_reserve["finish_pos"], my_unit=False,
                                 name=app.card_from_reserve["unit_name"],
                                 attack_points=app.card_from_reserve["unit_defence_points"],
@@ -204,7 +207,8 @@ def render_enemies_reserve_spawn():
                                 size=(app.card_size, app.card_size), source=app.card_from_reserve["unit_source"],
                                 pos=start_pos)
     app.root.get_screen("gamefield").children[0].add_widget(new_enemy_unit)
-    animation = Animation(pos=app.root.get_screen("gamefield").ids[new_enemy_unit.field_pos].pos, duration=0.3)
+
+    animation = Animation(pos=app.root.get_screen("gamefield").ids[",".join(str(x) for x in new_enemy_unit.field_pos)].pos, duration=0.3)
     animation.start(new_enemy_unit)
     app.root.get_screen("gamefield").ids.enemy_reserve_cards.children[0].remove_widget(
         app.root.get_screen("gamefield").ids.enemy_reserve_cards.children[0].children[
@@ -213,4 +217,25 @@ def render_enemies_reserve_spawn():
 
 
 def render_enemies_turn():
-    pass
+    app = App.get_running_app()
+    for x in app.root.get_screen("gamefield").children[0].children:
+        if str(type(x)) == "<class 'ui.cards.BattleCard'>" and not x.my_unit and tuple(x.field_pos) == tuple(
+                app.enemies_turn["start_pos"]):
+            who_moving = x
+
+    if not app.enemies_turn["fire"]:
+        end_point = [x for x in app.root.get_screen("gamefield").ids.gamefield.children if
+                     tuple(x.field_pos) == tuple(app.enemies_turn["finish_pos"])][0]
+        animation = Animation(pos=end_point.pos, duration=0.3)
+        animation.start(who_moving)
+        who_moving.field_pos = tuple(app.enemies_turn["finish_pos"])
+
+    else:
+        for x in app.root.get_screen("gamefield").children[0].children:
+            if str(type(x)) == "<class 'ui.cards.BattleCard'>" and x.my_unit and tuple(x.field_pos) == tuple(
+                    app.enemies_turn["finish_pos"]):
+                end_point = x
+        end_point.attack(who_moving)
+
+
+

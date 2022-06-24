@@ -47,16 +47,14 @@ def status(data):
 @sio.on("enemies_turn")
 def enemies_turn(data):
     app = App.get_running_app()
-    app.enemies_turn = {"unit_pos_start": data["unit_pos_start"],
-                        "unit_pos_finish": data["unit_pos_finish"],
-                        "fire": data["fire"]}
+    app.enemies_turn = data
 
 
 @sio.on("enemies_card_from_reserve")
 def enemies_card_from_reserve(data):
     app = App.get_running_app()
     app.card_from_reserve = {"start_pos": data["start_pos"],
-                             "finish_pos": data["finish_pos"], "unit_name": data["unit_name"],
+                             "finish_pos": tuple(data["finish_pos"]), "unit_name": data["unit_name"],
                              "unit_source": data["unit_source"],
                              "unit_type": data["unit_type"], "unit_attack_points": data["unit_attack_points"],
                              "unit_defence_points": data["unit_defence_points"], "card_in_reserve": data["card_in_reserve"]}
@@ -68,7 +66,3 @@ def enemies_card_from_reserve(data):
     app.enemies_end_turn = True
 
 
-@sio.on("enemies_turn")
-def enemies_turn(data):
-    app = App.get_running_app()
-    app.enemies_turn = True
